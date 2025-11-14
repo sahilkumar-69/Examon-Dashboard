@@ -1,59 +1,65 @@
 import { useState } from "react";
 import axios from "axios";
+import { useNavigate } from "react-router-dom";
+import { useAddNews } from "../../hooks/useLatestNews";
+import { toast } from "react-toastify";
 
 const AddNewsForm = () => {
+  const Navigate = useNavigate();
   const [formData, setFormData] = useState({
     image: null,
     title: "",
     description: "",
   });
-  const [loading, setLoading] = useState(false);
-  const [message, setMessage] = useState("");
+  const [preview, setPreview] = useState(null);
+  const { mutate, isPending, error } = useAddNews();
 
-  // 🔹 Handle input changes
+  //  Handle input changes
   const handleChange = (e) => {
     const { name, value, files } = e.target;
     setFormData((prev) => ({
       ...prev,
       [name]: files ? files[0] : value,
     }));
+
+    if (files) {
+      setPreview(URL.createObjectURL(files[0]));
+    }
   };
 
   // 🔹 Submit form data to backend
-  const handleSubmit = async (e) => {
+  const handleSubmit = (e) => {
     e.preventDefault();
-    setMessage("");
-    setLoading(true);
 
-    try {
-      // Create FormData for file upload
-      const data = new FormData();
-      data.append("image", formData.image);
-      data.append("title", formData.title);
-      data.append("description", formData.description);
+    const formData1 = new FormData();
 
-      // ✅ Replace this URL with your actual backend endpoint
-      const res = await axios.post("http://localhost:5000/api/news", data, {
-        headers: { "Content-Type": "multipart/form-data" },
-      });
-
-      if (res.status === 200 || res.status === 201) {
-        setMessage("✅ News added successfully!");
-        setFormData({ image: null, title: "", description: "" });
-      }
-    } catch (err) {
-      console.error(err);
-      setMessage("❌ Failed to add news. Please try again.");
-    } finally {
-      setLoading(false);
+    for (const key in formData) {
+      formData1.append(key, formData[key]);
     }
+
+    mutate(formData1, {
+      onSuccess: (resp) => {
+        setFormData({
+          image: null,
+          title: "",
+          description: "",
+        });
+        setPreview(null);
+        toast.success("News Added");
+        Navigate("/news");
+      },
+      onError: (e) => {
+        console.log(e);
+        toast.error("error");
+      },
+    });
   };
 
   return (
     <div className="min-h-screen bg-gray-50 flex justify-center items-center px-4">
       <div className="bg-white shadow-lg rounded-xl p-8 w-full max-w-lg border border-gray-200">
         <h2 className="text-2xl font-semibold text-gray-800 mb-6 text-center">
-          Add News / Notification
+          Add News
         </h2>
 
         <form onSubmit={handleSubmit} className="space-y-5">
@@ -70,6 +76,13 @@ const AddNewsForm = () => {
               className="w-full border border-gray-300 rounded-lg p-2 cursor-pointer file:cursor-pointer  text-sm file:mr-3 file:py-2 file:px-4 file:rounded-md file:border-0 file:bg-blue-600 file:text-white hover:file:bg-blue-700"
               required
             />
+            {preview && (
+              <img
+                src={preview}
+                alt="Preview"
+                className="mt-4 w-40 h-40 object-cover rounded-lg  "
+              />
+            )}
           </div>
 
           {/* Title */}
@@ -107,20 +120,19 @@ const AddNewsForm = () => {
           {/* Submit Button */}
           <button
             type="submit"
-            disabled={loading}
+            disabled={isPending}
             className="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition disabled:opacity-50"
           >
-            {loading ? "Submitting..." : "Add News"}
+            {isPending ? "Adding..." : "Add News"}
           </button>
         </form>
 
-        {message && (
+        {error && (
           <p
-            className={`mt-4 text-center font-medium ${
-              message.startsWith("✅") ? "text-green-600" : "text-red-600"
+            className={`mt-4 text-center font-medium text-red-600"
             }`}
           >
-            {message}
+            {error}
           </p>
         )}
       </div>

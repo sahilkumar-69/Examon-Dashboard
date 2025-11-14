@@ -1,50 +1,90 @@
 import React, { useState } from "react";
+import { CheckIn } from "../Handler/Authentication";
+import { toast } from "react-toastify";
 
 const Login = () => {
   const [email, setEmail] = useState("");
+  const [FullName, setFullName] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
-  const [loading, setLoading] = useState(false);
+  const [isLogging, setIsLogging] = useState(true);
 
-  const BASE_URL = import.meta.env.VITE_BASE_URL || "http://localhost:5000";
+  const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
     setLoading(true);
 
+    const url = isLogging ? "signin" : "signup";
+
+    const credentials = {
+      email,
+      password,
+      fullname: FullName,
+    };
+
+    console.log(FullName, email, password);
+
     try {
-      const response = await fetch(`${BASE_URL}/api/auth/login`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
-      });
+      const data = await CheckIn(url, credentials);
 
-      const data = await response.json();
+      console.log(data);
 
-      if (!response.ok) {
+      if (!data.user) {
         setError(data.message || "Invalid credentials. Try again.");
       } else {
-        // Store token or handle redirect
-        localStorage.setItem("token", data.token);
+        if (!isLogging) {
+          toast.success("Profile created. Please login");
+          setPassword("");
+          setEmail("");
+          setFullName("");
+          setIsLogging(true);
+
+          return;
+        }
+        const user = JSON.stringify(data.user);
+        localStorage.setItem("token", data.accessToken);
+        localStorage.setItem("authUser", user);
         window.location.href = "/dashboard"; // redirect after success
       }
     } catch (err) {
-      setError("Network error. Please try again later.");
+      console.log(err);
+      setError(err.response.data.msg);
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#4e54c8] to-[#8f94fb] p-4">
-      <div className="bg-white rounded-xl shadow-xl p-8 w-full max-w-md animate-fadeIn">
+    <div className="min-h-screen min-w-screen flex items-center justify-center bg-[url('https://static.vecteezy.com/system/resources/thumbnails/026/706/335/small/happy-graduation-greeting-background-with-sketch-vector.jpg')] bg-center bg-no-repeat bg-cover p-4">
+      <div className="bg-white  rounded-xl shadow-xl p-8 w-full max-w-md animate-fadeIn">
         <h2 className="text-2xl font-semibold text-gray-800 text-center mb-6">
-          Login to Your Account
+          {isLogging ? "Login to Your Account" : "Enter required details"}
         </h2>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           {/* Email Field */}
+          {!isLogging && (
+            <div>
+              <label
+                htmlFor="fullname"
+                className="block text-sm font-medium text-gray-600 mb-1"
+              >
+                Full Name :
+              </label>
+              <input
+                type="text"
+                id="fullname"
+                disabled={loading}
+                required
+                value={FullName}
+                onChange={(e) => setFullName(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg   focus:ring-indigo-400 focus:border-indigo-400 outline-none text-sm transition"
+                placeholder="Enter your email"
+              />
+            </div>
+          )}
           <div>
             <label
               htmlFor="email"
@@ -54,6 +94,7 @@ const Login = () => {
             </label>
             <input
               type="email"
+              disabled={loading}
               id="email"
               required
               value={email}
@@ -74,6 +115,7 @@ const Login = () => {
             <input
               type="password"
               id="password"
+              disabled={loading}
               required
               value={password}
               onChange={(e) => setPassword(e.target.value)}
@@ -98,19 +140,47 @@ const Login = () => {
                 : "bg-gradient-to-r from-indigo-500 to-indigo-400 hover:shadow-lg hover:-translate-y-0.5"
             }`}
           >
-            {loading ? "Logging in..." : "Login"}
+            {isLogging
+              ? loading
+                ? "Logging in..."
+                : "Login"
+              : loading
+              ? "Submitting..."
+              : "SignUp"}
           </button>
         </form>
 
-        {/* <p className="text-center text-gray-500 text-xs mt-4">
-          Don’t have an account?{" "}
-          <a
-            href="/register"
-            className="text-indigo-500 hover:underline font-medium"
-          >
-            Register
-          </a>
-        </p> */}
+        {isLogging ? (
+          <p className="text-center text-gray-500 text-xs mt-4">
+            Don’t have an account?{" "}
+            <span
+              style={{
+                cursor: loading ? "not-allowed" : "pointer",
+              }}
+              onClick={() => {
+                !loading && setIsLogging(false);
+              }}
+              className="text-indigo-500 cursor-pointer hover:underline font-medium"
+            >
+              Register
+            </span>
+          </p>
+        ) : (
+          <p className="text-center text-gray-500 text-xs mt-4">
+            Already have an account?{" "}
+            <span
+              style={{
+                cursor: loading ? "not-allowed" : "pointer",
+              }}
+              onClick={() => {
+                !loading && setIsLogging(true);
+              }}
+              className="text-indigo-500 cursor-pointer hover:underline font-medium"
+            >
+              Login
+            </span>
+          </p>
+        )}
       </div>
     </div>
   );

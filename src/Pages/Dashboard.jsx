@@ -1,80 +1,111 @@
-import React from "react";
-import { useNavigate } from "react-router-dom";
+import {  useNavigate } from "react-router-dom";
 import DashCard from "../Component/Cards/DashCards";
-import Data from "../DataStore/DataStore.json";
-import { CiShop } from "react-icons/ci";
-import { FaPeopleGroup } from "react-icons/fa6";
-import { SiAnycubic } from "react-icons/si";
-import { SiGooglemessages } from "react-icons/si";
-import { GiTakeMyMoney } from "react-icons/gi";
-import CommisionChart from "../Component/Charts/Commission";
-import Anaylitics from "../Component/Charts/AnalyticsChart";
-import { MdOutlineAnalytics } from "react-icons/md";
+import { GiNotebook } from "react-icons/gi";
+import RecentItemsCard from "../Component/Cards/RecentAddedCard";
+import Loader from "../Component/Loader";
+import { PiChalkboardSimpleBold, PiVideoBold } from "react-icons/pi";
+import { FaUsers } from "react-icons/fa";
+import { MdHistory } from "react-icons/md";
+import { useGetContent } from "../hooks/useHooks";
 
 function Dashboard() {
   const navigate = useNavigate();
 
-  const data = {
-    retailers: Data.retailers.length,
-    customers: Data.customers.length,
-    products: Data.product_listings.length,
-    messages: Data.messages.length,
-    revenue: Data?.admins?.[0]?.revenue_summary?.currentyear?.July?.total || 0,
-  };
-  const breakdown = Data.admins?.[0].revenue_summary;
+  const {
+    data: dashboard,
+    isLoading,
+    isError,
+    error,
+  } = useGetContent({
+    keys: ["dashboard"],
+    handlerProps: {
+      url: "/totalcount",
+    },
+  });
+
+  if (isLoading) return <Loader />;
+
+  if (isError) return <p>{error}</p>;
+
   const CardsData = [
     {
-      icon: <CiShop />,
-      title: "Retailers",
-      count: data.retailers,
-      path: "/users/retailers",
+      icon: <FaUsers />,
+      title: "Mentors",
+      count: dashboard.MentorsCount,
+      // path: "/users/retailers",
       bgColor: "bg-[var(--accent)]",
     },
     {
-      icon: <FaPeopleGroup />,
-      title: "Customers",
-      count: data.customers,
-      path: "/users/customers",
+      icon: <MdHistory />,
+      title: "PYQs",
+      count: dashboard.PYQsCount,
+      // path: "/users/customers",
       bgColor: "bg-[var(--accent-dark)]",
     },
     {
-      icon: <SiAnycubic />,
-      title: "Products",
-      count: data.products,
-      path: "/products",
+      icon: <PiVideoBold />,
+      title: "Courses",
+      count: dashboard.CoursesCount,
+      // path: "/products",
       bgColor: "bg-[var(--success)]",
     },
     {
-      icon: <SiGooglemessages />,
-      title: "Messages",
-      count: data.messages,
-      path: "/messages",
+      icon: <PiChalkboardSimpleBold />,
+      title: "Batches",
+      count: dashboard.BatchesCount,
+      // path: "/messages",
       bgColor: "bg-[var(--warning)]",
     },
     {
-      icon: <GiTakeMyMoney />,
-      title: "Revenue",
-      count: data.revenue,
-      path: "/revenue",
+      icon: <GiNotebook />,
+      title: "Quizzes",
+      count: dashboard.QuizzesCount,
+      // path: "/revenue",
+    },
+  ];
+
+  const recentCardData = [
+    {
+      title: "Mentors",
+      link: "/mentors",
+      data: dashboard.Mentors,
+    },
+    {
+      title: "PYQs",
+      link: "/studymaterial/pyq",
+      data: dashboard?.PYQs[0]?.questionspaper || [],
+    },
+    {
+      title: "Courses",
+      link: "/courses",
+      data: dashboard?.Courses[0]?.courses || [],
+    },
+    {
+      title: "Batches",
+      link: "/batches",
+      data: dashboard.Batches[0].batches?.slice(0, 3),
+    },
+    {
+      title: "Quizzes",
+      link: "/studymaterial/quiz",
+      data: dashboard.Quizzes,
     },
   ];
 
   return (
-    <section className="px-6 w-full bg-[var(--primary-bg)] min-h-screen">
+    <section className="p-6 w-full bg-[var(--primary-bg)] min-h-screen">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold text-[var(--primary-text)] mb-8">
           Dashboard
         </h1>
-
-        <div className=""></div>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-6  ">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6  lg:grid-cols-5 ">
         {CardsData.map(({ icon, title, count, path, bgColor }, idx) => (
           <div
             key={idx}
-            className="cursor-pointer"
-            onClick={() => navigate(path)}
+            // className="cursor-pointer"
+            // onClick={() => navigate(path)}
             role="button"
             tabIndex={0}
             onKeyDown={(e) => {
@@ -91,8 +122,11 @@ function Dashboard() {
         ))}
       </div>
 
-      {/* <CommisionChart  breakdown={breakdown}/>
-      <Anaylitics/> */}
+      <section className=" grid grid-cols-1 md:grid-cols-2  lg:grid-cols-3  gap-5   h-auto my-5 ">
+        {recentCardData.map((item, i) => (
+          <RecentItemsCard key={i} item={item} />
+        ))}
+      </section>
     </section>
   );
 }

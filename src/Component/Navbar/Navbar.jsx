@@ -1,24 +1,27 @@
-import React, { useState } from "react";
+import { useEffect, useState } from "react";
 import { useSidebar } from "./SidebarContext";
 import {
   FaTachometerAlt,
   FaUsers,
   FaBoxOpen,
-  FaCheckCircle,
-  FaComments,
-  FaChartLine,
-  FaFileAlt,
-  FaMoneyBillWave,
   FaSignOutAlt,
-  FaUserTie,
-  FaUserFriends,
-  FaClock,
   FaChevronLeft,
   FaChevronRight,
 } from "react-icons/fa";
 import { CiCircleChevDown, CiCircleChevUp } from "react-icons/ci";
 import { NavLink, useLocation } from "react-router-dom";
-import Data from "../../DataStore/DataStore.json";
+// import Data from "../../DataStore/DataStore.json";
+import { GiAchievement, GiNotebook } from "react-icons/gi";
+import { MdHistory, MdOutlineReviews } from "react-icons/md";
+import { IoNewspaperOutline } from "react-icons/io5";
+import { LuNotebookPen } from "react-icons/lu";
+import { RiBloggerLine, RiContactsBook3Line } from "react-icons/ri";
+import { FaUserGear } from "react-icons/fa6";
+import {
+  PiChalkboardSimpleBold,
+  PiExamBold,
+  PiVideoBold,
+} from "react-icons/pi";
 
 const navItems = [
   {
@@ -28,8 +31,13 @@ const navItems = [
   },
   {
     label: "User Management",
+    icon: <FaUserGear />,
+    route: "/user-management",
+  },
+  {
+    label: "Mentors",
     icon: <FaUsers />,
-    route: "/users",
+    route: "/mentors",
   },
   {
     label: "Study Material",
@@ -38,48 +46,63 @@ const navItems = [
       {
         label: "Quiz",
         route: "/studymaterial/quiz",
-        icon: <FaBoxOpen />,
+        icon: <GiNotebook />,
       },
       {
         label: "PYQs",
         route: "/studymaterial/pyq",
-        icon: <FaClock />,
+        icon: <MdHistory />,
       },
       {
         label: "Notes",
         route: "/studymaterial/notes",
-        icon: <FaClock />,
+        icon: <LuNotebookPen />,
       },
     ],
   },
   {
     label: "Courses",
-    icon: <FaCheckCircle />,
+    icon: <PiVideoBold />,
     route: "/courses",
   },
   {
-    label: "Achivements",
-    icon: <FaComments />,
-    route: "/achivements",
+    label: "Batches",
+    icon: <PiChalkboardSimpleBold />,
+    route: "/batches",
   },
   {
-    label: "Testimonials",
-    icon: <FaFileAlt />,
-    route: "/testimonials",
+    label: "Achievements",
+    icon: <GiAchievement />,
+    route: "/achievements",
+  },
+  {
+    label: "Exam Details",
+    icon: <PiExamBold />,
+    route: "/exams",
   },
   {
     label: "Latest News",
-    icon: <FaChartLine />,
+    icon: <IoNewspaperOutline />,
     route: "/news",
   },
   {
-    label: "Commission Settings",
-    icon: <FaMoneyBillWave />,
-    route: "/settings/commission",
+    label: "Reviews",
+    icon: <MdOutlineReviews />,
+    route: "/reviews",
+  },
+  {
+    label: "Blogs",
+    icon: <RiBloggerLine />,
+    route: "/blogs",
+  },
+  {
+    label: "Contact Us",
+    icon: <RiContactsBook3Line />,
+    route: "/contact-us",
   },
 ];
 
-export default function Sidebar() {
+export default function Sidebar({ user }) {
   const location = useLocation();
   const [activeDropdown, setActiveDropdown] = useState(null);
   const { collapsed, toggleCollapse } = useSidebar();
@@ -91,9 +114,13 @@ export default function Sidebar() {
   const isSubActive = (subMenu) =>
     subMenu?.some((item) => location.pathname.startsWith(item.route));
 
+  useEffect(() => {}, [user]);
+
+  if (!user) return;
+
   return (
     <aside
-      className={`h-screen fixed top-0 left-0 bg-[var(--primary-color)] text-[var(--tertiary-color)] border-r border-[var(--border)] transition-all duration-300 font-[var(--font-family)] flex flex-col ${
+      className={`h-screen fixed z-50 top-0 left-0 bg-[var(--primary-color)] text-[var(--tertiary-color)] border-r border-[var(--border)] transition-all duration-300 font-[var(--font-family)] flex flex-col ${
         collapsed ? "w-20" : "w-72"
       }`}
     >
@@ -109,17 +136,20 @@ export default function Sidebar() {
           }`}
         >
           <img
-            src={Data.admins?.[0].avatar}
+            src={
+              user?.avatar ||
+              "https://upload.wikimedia.org/wikipedia/commons/8/89/Portrait_Placeholder.png"
+            }
             alt="Admin"
             className="w-10 h-10 rounded-full"
           />
           {!collapsed && (
             <div className="text-sm">
-              <p className="font-semibold text-[var(--text-color)]">
-                {Data.admins?.[0].name}
+              <p className="font-semibold uppercase text-[var(--text-color)]">
+                {user?.fullname}
               </p>
               <p className="text-xs text-[var(--secondary-text)]">
-                {Data.admins?.[0].email}
+                {user?.email}
               </p>
             </div>
           )}
@@ -204,7 +234,7 @@ export default function Sidebar() {
       <div className="p-3 border-t border-[var(--border)]">
         <NavLink
           to="/logout"
-          className="flex items-center gap-2 px-3 py-2 w-full rounded-md text-[var(--danger)] hover:bg-red-100"
+          className="flex items-center gap-2 px-3 py-2 w-full rounded-md hover:text-red-600 hover:bg-[var(--accent-dark)]"
         >
           <FaSignOutAlt />
           {!collapsed && "Logout"}

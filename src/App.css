@@ -2,7 +2,7 @@
 
 /* Reset */
 * {
-  overflow-x: hidden;
+  /* overflow-x: hidden; */
   box-sizing: border-box;
   font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
 }
@@ -10,27 +10,27 @@
 /* Global Colors */
 
 :root {
-  --primary-color: #003e68;
+  --primary-color: #003e68 !important;
   --secondary-color: #3498db;
   --tertiary-color: #eef6fc;
   --background-color: #ffffff;
-  --text-color: #9795b5;
+  --text-color: #fbbc00 !important;
   /* --border:white; */
   --fade-color: #dddddd;
   --accent-dark: #000000;
   --footer-bg: #697077;
   --font-family: "Inter", "Sans-serif", Arial, sans-serif;
-  /* --primary-bg: #f5f7fa;
-  --secondary-bg: #ffffff;
-  --primary-text: #1f2937;
-  --secondary-text: #6b7280;
-  --accent: #6366f1;          
-  --accent-dark: #4f46e5;
+  --accent: #6366f1;
   --success: #10b981;
   --warning: #f59e0b;
+  /* --primary-bg: #f5f7fa;
+  --primary-text: #1f2937;
+  --secondary-text: #6b7280;
+  --secondary-bg: #ffffff;
+  --accent-dark: #4f46e5;
   --danger: #ef4444;
   --border: #e5e7eb;
-  --card-shadow: rgba(0, 0, 0, 0.05); */ 
+  --card-shadow: rgba(0, 0, 0, 0.05); */
 }
 
 /* App Container */

@@ -1,4 +1,6 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
+import { useAddCourse } from "../../hooks/useCourse";
+import { toast } from "react-toastify";
 
 const CourseFormPage = () => {
   const [formData, setFormData] = useState({
@@ -7,6 +9,7 @@ const CourseFormPage = () => {
     insideCourses: "",
     description: "",
     perks: "",
+    examCategory: "",
     previousprice: "",
     actualprice: "",
     percent: "",
@@ -14,7 +17,11 @@ const CourseFormPage = () => {
     amount: "",
   });
 
+  const imgRef = useRef();
+
   const [preview, setPreview] = useState(null);
+
+  const { mutate, isSuccess, isPending, isError, error } = useAddCourse();
 
   // Handle text input
   const handleChange = (e) => {
@@ -31,15 +38,43 @@ const CourseFormPage = () => {
     }
   };
 
-  // Handle form submission
   const handleSubmit = (e) => {
     e.preventDefault();
-    console.log("Final Course Data:", formData);
-    alert("Form submitted! Check console for data.");
+
+    const formData1 = new FormData();
+
+    for (const key in formData) {
+      formData1.append(key, formData[key]);
+    }
+
+    mutate(formData1, {
+      onSuccess: (resp) => {
+        setFormData({
+          img: null,
+          title: "",
+          insideCourses: "",
+          description: "",
+          perks: "",
+          examCategory: "",
+          previousprice: "",
+          actualprice: "",
+          percent: "",
+          Discount: "true",
+          amount: "",
+        });
+        imgRef.current = null;
+        console.log(resp);
+        toast.success("Course added");
+      },
+      onError: (e) => {
+        console.log(e);
+        toast.error("error");
+      },
+    });
   };
 
   return (
-    <div className="max-w-4xl mx-auto bg-white p-8 rounded-2xl shadow-md mt-10">
+    <div className="max-w-4xl mx-auto bg-white p-8 rounded-2xl shadow-md my-10">
       <h2 className="text-2xl font-bold mb-6 text-center text-gray-800">
         Add New Course
       </h2>
@@ -51,6 +86,7 @@ const CourseFormPage = () => {
             Course Image
           </label>
           <input
+            ref={imgRef}
             type="file"
             accept="image/*"
             onChange={handleFileChange}
@@ -60,11 +96,25 @@ const CourseFormPage = () => {
             <img
               src={preview}
               alt="Preview"
-              className="mt-4 w-40 h-40 object-cover rounded-lg border"
+              className="mt-4 w-40 h-40 object-cover rounded-lg  "
             />
           )}
         </div>
 
+        {/* course category */}
+        <div>
+          <label className="block text-gray-700 font-semibold mb-2">
+            Course Category
+          </label>
+          <input
+            type="text"
+            name="examCategory"
+            value={formData.examCategory}
+            onChange={handleChange}
+            placeholder="e.g. UPSC/GATE/JEE"
+            className=" border border-gray-300  p-2 rounded w-full"
+          />
+        </div>
         {/* Title */}
         <div>
           <label className="block text-gray-700 font-semibold mb-2">
@@ -203,9 +253,13 @@ const CourseFormPage = () => {
         {/* Submit Button */}
         <button
           type="submit"
+          disabled={isPending}
+          style={{
+            cursor: isPending ? "not-allowed" : "pointer",
+          }}
           className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-lg font-semibold transition"
         >
-          Save Course
+          {isPending ? "Saving..." : "Save Course"}
         </button>
       </form>
     </div>

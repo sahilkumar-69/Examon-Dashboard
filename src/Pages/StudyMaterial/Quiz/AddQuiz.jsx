@@ -1,5 +1,9 @@
-import React, { useState } from "react";
-import { AiFillNotification, AiOutlineDelete } from "react-icons/ai";
+import { useState } from "react";
+import { AiOutlineDelete } from "react-icons/ai";
+
+import Loader from "../../../Component/Loader";
+import { toast } from "react-toastify";
+import { useUpdateOrDeleteContent } from "../../../hooks/useHooks";
 
 const AddNewQuiz = () => {
   const [formData, setFormData] = useState({
@@ -23,6 +27,10 @@ const AddNewQuiz = () => {
     ],
   });
 
+  const { mutate, isPending, isError, error } = useUpdateOrDeleteContent({
+    keys: ["quiz"],
+  });
+
   // -------------------------------
   // Handle input changes
   // -------------------------------
@@ -34,11 +42,6 @@ const AddNewQuiz = () => {
   // -------------------------------
   // Handle tags
   // -------------------------------
-  const handleTagChange = (index, value) => {
-    const updatedTags = [...formData.tags];
-    updatedTags[index] = value;
-    setFormData((prev) => ({ ...prev, tags: updatedTags }));
-  };
 
   const addTag = () => {
     const tag2add = prompt("Enter Tag value (1-20 characters)");
@@ -73,7 +76,6 @@ const AddNewQuiz = () => {
 
   const RemoveQuestion = (id) => {
     const popUpRes = confirm("Confirm to delete this question");
-    console.log(popUpRes);
 
     if (popUpRes) {
       const remainingQuestions = formData.questions.filter((q) => q.id !== id);
@@ -110,44 +112,88 @@ const AddNewQuiz = () => {
   const handleSubmit = (e) => {
     e.preventDefault();
     console.log("Final JSON:", formData);
-    alert("Form submitted! Check console for output.");
+    mutate(
+      {
+        method: "post",
+        url: `/quizzes/upload`,
+        data: formData,
+      },
+      {
+        onSuccess: (d) => {
+          console.log("response data", d);
+          setFormData({
+            id: "",
+            title: "",
+            exam: "",
+            duration: "",
+            totalMarks: "",
+            tags: [],
+            questions: [
+              {
+                id: "",
+                type: "",
+                question: "",
+                options: ["", "", "", ""],
+                correctAnswerIndex: 0,
+                marks: "",
+                topic: "",
+                difficulty: "easy",
+              },
+            ],
+          });
+          toast.success("Quiz Created");
+        },
+        onError: (error) => {
+          console.log(error);
+          toast.error(error.message);
+        },
+      }
+    );
   };
 
   return (
     <div className="max-w-4xl mx-auto bg-white p-6 rounded-2xl shadow-md mt-8">
       <h2 className="text-2xl font-bold mb-6 text-center text-gray-800">
-        UPSC Exam Form
+        Add Quiz
       </h2>
 
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* Exam Info */}
         <div className="grid grid-cols-2 gap-4">
           <input
+            required
             type="text"
             name="title"
+            disabled={isPending}
             value={formData.title}
             onChange={handleChange}
-            placeholder="Exam Title"
+            placeholder="Quiz Title"
             className="border p-2 rounded w-full"
           />
           <input
+            required
             type="text"
             name="exam"
+            disabled={isPending}
             value={formData.exam}
             onChange={handleChange}
-            placeholder="Exam Type"
+            placeholder="Quiz Type"
             className="border p-2 rounded w-full"
           />
           <input
+            required
             type="number"
             name="duration"
+            disabled={isPending}
             value={formData.duration}
             onChange={handleChange}
             placeholder="Duration (in seconds)"
             className="border p-2 rounded w-full"
           />
           <input
+            required
             type="number"
+            disabled={isPending}
             name="totalMarks"
             value={formData.totalMarks}
             onChange={handleChange}
@@ -160,14 +206,6 @@ const AddNewQuiz = () => {
         <div>
           <h3 className="font-semibold text-gray-700 mb-2">Tags</h3>
           {formData.tags.map((tag, index) => (
-            // <input
-            //   key={index}
-            //   type="text"
-            //   value={tag}
-            //   onChange={(e) => handleTagChange(index, e.target.value)}
-            //   placeholder="Tag"
-            //   className="border p-2 rounded w-full mb-2"
-            // />
             <div
               key={index}
               className="pr-2 pl-3 inline py-1 m-1 rounded-2xl bg-blue-600 text-white"
@@ -175,7 +213,7 @@ const AddNewQuiz = () => {
               {tag}
               <span
                 onClick={() => {
-                  removeTag(tag);
+                  !isPending && removeTag(tag);
                 }}
                 className="text-lg ml-1 p-1 text-gray-100 cursor-pointer"
               >
@@ -185,6 +223,10 @@ const AddNewQuiz = () => {
           ))}
           <button
             type="button"
+            disabled={isPending}
+            style={{
+              cursor: isPending ? "not-allowed" : "pointer",
+            }}
             onClick={addTag}
             className="px-3 py-1 cursor-pointer bg-green-600 text-white text-sm rounded-2xl"
           >
@@ -210,6 +252,7 @@ const AddNewQuiz = () => {
                 <AiOutlineDelete />
               </span>
               <input
+                required
                 type="text"
                 value={q.question}
                 onChange={(e) =>
@@ -222,6 +265,7 @@ const AddNewQuiz = () => {
               <div className="grid grid-cols-2 gap-2 mb-3">
                 {q.options.map((opt, oIndex) => (
                   <input
+                    required
                     key={oIndex}
                     type="text"
                     value={opt}
@@ -237,6 +281,7 @@ const AddNewQuiz = () => {
               <div className="flex gap-3 items-center mb-2">
                 <label className="text-gray-600 text-sm">Correct Answer:</label>
                 <select
+                  required
                   value={q.correctAnswerIndex}
                   onChange={(e) =>
                     handleQuestionChange(
@@ -257,6 +302,7 @@ const AddNewQuiz = () => {
 
               <div className="grid grid-cols-3 gap-2">
                 <input
+                  required
                   type="number"
                   value={q.marks}
                   onChange={(e) =>
@@ -266,6 +312,7 @@ const AddNewQuiz = () => {
                   className="border p-2 rounded"
                 />
                 <input
+                  required
                   type="text"
                   value={q.topic}
                   onChange={(e) =>
@@ -302,8 +349,9 @@ const AddNewQuiz = () => {
           type="submit"
           className="w-full py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
         >
-          Submit
+          {isPending ? <Loader /> : "Submit"}
         </button>
+        {isError && <p>{error}</p>}
       </form>
     </div>
   );
